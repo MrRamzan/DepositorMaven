@@ -20,7 +20,13 @@ public interface DbworkInterface {
     ArrayList<SurnamesAndInitials> selectInitials ();
     ArrayList<ChangingTheCase> changeRegistr();
 
-    boolean addNewDepositor(DepositorInfo depositorInfo);
+    double MinSum();
+    double avgSum();
+    ArrayList<CountOfDeposit> countOfDep ();
 
+
+    boolean addNewDepositor(DepositorInfo depositorInfo);
+    boolean createNewTable (DepositorInfo depositorInfo);
+    boolean copyInfoToOtherTable(DepositorInfo depositorInfo);
 
 }

@@ -16,6 +16,10 @@ public class DepositorInfo {
     public DepositorInfo() {
     }
 
+    public DepositorInfo(Operation operation) {
+        this.operation = operation;
+    }
+
     public DepositorInfo(Depositor depositor, Account account, Street street) {
         this.depositor = depositor;
         this.account = account;

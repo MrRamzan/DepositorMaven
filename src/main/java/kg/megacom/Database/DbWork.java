@@ -6,6 +6,7 @@ import kg.megacom.Models.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 public class DbWork implements DbworkInterface {
 
@@ -345,45 +346,188 @@ public class DbWork implements DbworkInterface {
     }
 
     @Override
-    public boolean addNewDepositor(DepositorInfo depositorInfo) {
+    public double MinSum() {
+        Connection connection = getConnection();
+        double result = 0;
+        try {
+            Statement statement = connection.createStatement();
+            String query = " SELECT MIN(op.depositsum) FROM operation op ";
+
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                double minsum = resultSet.getDouble("min");
+                result = minsum;
+            }
+            return result;
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public double avgSum() {
+        Connection connection = getConnection();
+        double result = 0;
+        try {
+            Statement statement = connection.createStatement();
+            String query = " SELECT AVG(op.depositsum) FROM operation op ";
+
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                double avgsum = resultSet.getDouble("avg");
+                result = avgsum;
+            }
+            return result;
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public ArrayList<CountOfDeposit> countOfDep() {
+
+        ArrayList<CountOfDeposit> countDep = new ArrayList<>();
+        Connection connection = getConnection();
+        double result = 0;
+        try {
+            Statement statement = connection.createStatement();
+            String query = "SELECT d.lastname, d.firstname, COUNT(depositsum) AS COUNT_DEPOSIT FROM operation op\n" +
+                    "JOIN account ac ON ac.id=op.id_account\n" +
+                    "JOIN depositor d ON d.id=ac.id_depositor\n" +
+                    "GROUP BY d.id ";
+
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                String lname = resultSet.getString("lastname");
+                String fname = resultSet.getString("firstname");
+                int avgsum = resultSet.getInt("COUNT_DEPOSIT");
+
+                Depositor depositor = new Depositor(lname, fname);
+                Operation oper = new Operation(avgsum);
+                CountOfDeposit countdep = new CountOfDeposit(depositor, oper);
+                countDep.add(countdep);
+            }
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return countDep;
+    }
+
+    @Override
+    public boolean createNewTable(DepositorInfo depositorInfo) {
         Connection connection = getConnection();
         try {
-//            String query = "CREATE TABLE depositorInfo (\n" +
-//                    " id BIGSERIAL NOT NULL,\n" +
-//                    " lastname VARCHAR(50) NOT NULL,\n" +
-//                    " firstname VARCHAR(50) NOT NULL,\n" +
-//                    " middlename VARCHAR(50) NOT NULL,\n" +
-//                    " passnumber INTEGER NOT NULL,\n" +
-//                    " accountnum INTEGER NOT NULL,\n" +
-//                    " streetname VARCHAR(50) NOT NULL,\n" +
-//                    " housenum INTEGER NOT NULL,\n" +
-//                    " dateofoper DATE NOT NULL,\n" +
-//                    " depositsum BIGINT NOT NULL,\n" +
-//                    " id_account INTEGER\n" +
-//                    ");\n" +
-//                    "\n" +
-//                    "\n" +
-//                    "ALTER TABLE depositorInfo ADD CONSTRAINT depositorInfo_pkey PRIMARY KEY (id);\n" +
-//                    "ALTER TABLE depositorInfo ADD CONSTRAINT depositorInfo_id_account_fkey FOREIGN KEY (id_account) REFERENCES account(id)";
-//                     PreparedStatement statement = connection.prepareStatement(query);
+            String query = "CREATE TABLE depositorInfo (\n" +
+                    " id BIGSERIAL NOT NULL,\n" +
+                    " lastname VARCHAR(50) NOT NULL,\n" +
+                    " firstname VARCHAR(50) NOT NULL,\n" +
+                    " middlename VARCHAR(50) NOT NULL,\n" +
+                    " passnumber INTEGER NOT NULL,\n" +
+                    " accountnum INTEGER NOT NULL,\n" +
+                    " streetname VARCHAR(50) NOT NULL,\n" +
+                    " housenum INTEGER NOT NULL,\n" +
+                    " dateofoper DATE NOT NULL,\n" +
+                    " depositsum BIGINT NOT NULL,\n" +
+                    " id_account INTEGER\n" +
+                    ");\n" +
+                    "\n" +
+                    "\n" +
+                    "ALTER TABLE depositorInfo ADD CONSTRAINT depositorInfo_pkey PRIMARY KEY (id);\n" +
+                    "ALTER TABLE depositorInfo ADD CONSTRAINT depositorInfo_id_account_fkey FOREIGN KEY (id_account) REFERENCES account(id)";
+            PreparedStatement statement = connection.prepareStatement(query);
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return false;
+        }
 
-                String query2 = "INSERT INTO depositorInfo (lastname, firstname, middlename, passnumber, accountnum, streetname, housenum, dateofoper, depositsum, id_account )" +
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    @Override
+    public boolean copyInfoToOtherTable(DepositorInfo depositorInfo) {
+        Connection connection = getConnection();
+        try {
+            Statement statement = connection.createStatement();
+            String query = " SELECT * INTO newTable FROM depositorInfo";
+
+            ResultSet resultSet = statement.executeQuery(query);
+            int resultOfSaving = statement.executeUpdate(query);
+            return resultOfSaving == 1;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean addNewDepositor(DepositorInfo depositorInfo) {
+       Connection connection = getConnection();
+       try{
+           String query2 = "INSERT INTO depositorInfo (lastname, firstname, middlename, passnumber, accountnum, streetname, housenum, dateofoper, depositsum )" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             Scanner scanner = new Scanner(System.in);
             PreparedStatement statement1 = connection.prepareStatement(query2);
             System.out.println("Введите фамилию: ");
-            String str = scanner.next();
-            statement1.setString(1, str);
-//            statement1.setString(2, depositorInfo.getDepositor().getFirstName());
-//            statement1.setString(3, depositorInfo.getDepositor().getMiddleName());
-//            statement1.setLong(4, depositorInfo.getDepositor().getPassNumber());
-//            statement1.setLong(5, depositorInfo.getAccount().getAccountNum());
-//            statement1.setString(6, depositorInfo.getStreet().getName());
-//            statement1.setInt(7, depositorInfo.getHouse().getHouseNumber());
-//            statement1.setDate(8, (Date) depositorInfo.getTypeOfOperation().getDateOfOperation());
-//            statement1.setDouble(9, depositorInfo.getOperation().getDepositSum());
-//            statement1.setInt(10, (int) depositorInfo.getAccount().getId());
+            String lname = scanner.next();
+            statement1.setString(1, lname);
+            System.out.println("Введите имя: ");
+            String fname = scanner.next();
+            statement1.setString(2, fname );
+            System.out.println("Введите Отчество: ");
+            String mname = scanner.next();
+            statement1.setString(3, mname);
+            System.out.println("Введите номер паспорта: ");
+            long passnum = scanner.nextLong();
+            statement1.setLong(4, passnum);
+            System.out.println("Введите номер лицевого счета: ");
+            long acnum = scanner.nextLong();
+            statement1.setLong(5, acnum);
+            System.out.println("Введите название улицы: ");
+            String streetname = scanner.next();
+            statement1.setString(6, streetname);
+            System.out.println("Введите номер дома: ");
+            int housenum = scanner.nextInt();
+            statement1.setInt(7, housenum);
+            System.out.println("Введите дату совершения операции: ");
+            Date dateofoper = Date.valueOf(scanner.next());
+            statement1.setDate(8, dateofoper);
+            System.out.println("Введите сумму депозита: ");
+            double depositsum = scanner.nextDouble();
+            statement1.setDouble(9,depositsum);
             int resultOfSaving = statement1.executeUpdate();
             return resultOfSaving == 1 ? true : false;
         }catch (Exception e){
@@ -443,7 +587,3 @@ public class DbWork implements DbworkInterface {
 
 
 }
-//    SELECT d.lastname, min(op.depositsum) FROM operation op
-//        join account ac on ac.id=op.id_account
-//        join depositor d on d.id=ac.id_depositor
-//        group by lastname

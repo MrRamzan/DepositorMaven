@@ -14,6 +14,11 @@ public class Depositor {
         this.lastName = lastName;
     }
 
+    public Depositor(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
     public Depositor(String lastName, String firstName, String middleName) {
         this.lastName = lastName;
         this.firstName = firstName;

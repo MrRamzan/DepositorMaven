@@ -1,5 +1,8 @@
 package kg.megacom.Models;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 public class Account {
     private int id;
     private long accountNum;
